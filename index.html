@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Device Verification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0088cc 0%, #34b7f1 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .verification-container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .telegram-header {
+            background: linear-gradient(to right, #0088cc, #34b7f1);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .telegram-header h1 {
+            font-size: 28px;
+            margin: 0;
+        }
+
+        .telegram-icon {
+            font-size: 32px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .environment-check {
+            background: #ffeb3b;
+            color: #333;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .environment-check.show {
+            display: block;
+        }
+
+        .environment-check i {
+            margin-right: 8px;
+        }
+
+        .bot-info {
+            background: #e3f2fd;
+            padding: 15px;
+            margin: 0 25px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #0088cc;
+            margin-top: -10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .bot-id {
+            font-family: monospace;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #0088cc;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .device-info {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .device-info h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .device-id {
+            font-family: monospace;
+            background: #e8e8e8;
+            padding: 8px 12px;
+            border-radius: 5px;
+            word-break: break-all;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .verification-steps {
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: #e3f2fd;
+            border-left: 4px solid #0088cc;
+        }
+
+        .step.completed {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+
+        .step.failed {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            background: #ddd;
+            color: #666;
+        }
+
+        .step.active .step-icon {
+            background: #0088cc;
+            color: white;
+        }
+
+        .step.completed .step-icon {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step.failed .step-icon {
+            background: #f44336;
+            color: white;
+        }
+
+        .step-text {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .step-description {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #verifyBtn {
+            background: linear-gradient(to right, #0088cc, #34b7f1);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 0 auto 15px;
+            transition: all 0.3s;
+            font-weight: 600;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        #verifyBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(0, 136, 204, 0.3);
+        }
+
+        #verifyBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        .close-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .close-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #0088cc, #34b7f1);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-new {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-verified {
+            background: #4caf50;
+            color: white;
+        }
+
+        .telegram-only {
+            background: #0088cc;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .telegram-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .telegram-header {
+                padding: 20px;
+            }
+            
+            .telegram-header h1 {
+                font-size: 24px;
+            }
+            
+            .bot-info {
+                margin: 0 15px -10px 15px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="telegram-header">
+            <div class="telegram-icon">
+                <i class="fab fa-telegram"></i>
+            </div>
+            <h1>Telegram Device Verification</h1>
+        </div>
+
+        <div class="environment-check" id="environmentCheck">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="environmentMessage">This page only works within Telegram Web/App</span>
+        </div>
+
+        <div class="bot-info">
+            <div>Verifying for Bot:</div>
+            <div class="bot-id" id="botIdDisplay">Loading...</div>
+            <div class="telegram-badge">
+                <i class="fab fa-telegram"></i>
+                <span class="telegram-only">Telegram Only</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="device-info">
+                <h3>Your Device Identifier <span id="deviceStatusBadge" class="status-badge status-new">New Device</span></h3>
+                <div class="device-id" id="deviceIdDisplay">Generating device ID...</div>
+                <small style="color: #666; display: block; margin-top: 8px;">This verification works only within Telegram</small>
+            </div>
+
+            <div class="verification-steps">
+                <div class="step" id="step1">
+                    <div class="step-icon">1</div>
+                    <div class="step-text">
+                        <div class="step-title">Environment Check</div>
+                        <div class="step-description">Verifying Telegram environment</div>
+                    </div>
+                </div>
+
+                <div class="step" id="step2">
+                    <div class="step-icon">2</div>
+                    <div class="step-text">
+                        <div class="step-title">Internet Connection</div>
+                        <div class="step-description">Checking network connectivity</div>
+                    </div>
+                </div>
+
+                <div class="step" id="step3">
+                    <div class="step-icon">3</div>
+                    <div class="step-text">
+                        <div class="step-title">Security Check</div>
+                        <div class="step-description">Checking for VPN/Proxy usage</div>
+                    </div>
+                </div>
+
+                <div class="step" id="step4">
+                    <div class="step-icon">4</div>
+                    <div class="step-text">
+                        <div class="step-title">Device Verification</div>
+                        <div class="step-description">Final verification process</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="button-container">
+                <button id="verifyBtn">
+                    <i class="fas fa-shield-alt"></i> Start Verification
+                </button>
+            </div>
+
+            <div class="result-box" id="resultBox"></div>
+
+            <div class="action-buttons" id="actionButtons" style="display: none;">
+                <button class="action-btn close-btn" id="closeBtn">
+                    <i class="fas fa-times"></i> Close Page
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <i class="fab fa-telegram"></i>
+            <span>Telegram Device Verification System</span>
+        </div>
+    </div>
+
+    <script>
+        // Get parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const webhookUrl = urlParams.get("webhookUrl");
+        const botId = urlParams.get("botId");
+        
+        // Validate required parameters
+        if (!webhookUrl || !botId) {
+            document.body.innerHTML = `
+                <div class="verification-container" style="text-align: center; padding: 40px;">
+                    <div class="telegram-header">
+                        <h1><i class="fab fa-telegram"></i> Error</h1>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #f44336;"><i class="fas fa-exclamation-triangle"></i> Missing Parameters</h2>
+                        <p>Required parameters are missing from the URL.</p>
+                        <p>Please access this page through the correct Telegram bot link.</p>
+                        <div style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+                            <p><strong>Required parameters:</strong></p>
+                            <p><code>webhookUrl</code> - Your bot's webhook URL</p>
+                            <p><code>botId</code> - Your bot's unique ID</p>
+                        </div>
+                        <button class="action-btn close-btn" onclick="window.close()" style="margin-top: 20px;">
+                            <i class="fas fa-times"></i> Close Page
+                        </button>
+                    </div>
+                </div>
+            `;
+            throw new Error("Missing required URL parameters");
+        }
+        
+        // Display bot ID
+        document.getElementById('botIdDisplay').textContent = botId;
+        
+        // Telegram environment detection
+        function isTelegramEnvironment() {
+            // Method 1: Check for Telegram WebApp
+            if (typeof window.TelegramWebviewProxy !== 'undefined' || 
+                typeof window.Telegram !== 'undefined') {
+                return true;
+            }
+            
+            // Method 2: Check user agent for Telegram
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (userAgent.includes('telegram') || 
+                userAgent.includes('webview') && 
+                (document.referrer.includes('telegram.org') || 
+                 document.referrer.includes('t.me'))) {
+                return true;
+            }
+            
+            // Method 3: Check URL parameters (Telegram often adds tgShareScoreUrl, etc.)
+            if (window.location.search.includes('tg=') || 
+                window.location.hash.includes('tg')) {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Show environment warning if not in Telegram
+        function checkEnvironment() {
+            const isTelegram = isTelegramEnvironment();
+            const envCheck = document.getElementById('environmentCheck');
+            const envMessage = document.getElementById('environmentMessage');
+            
+            if (!isTelegram) {
+                envCheck.classList.add('show');
+                envMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> This verification only works within Telegram Web/App';
+                return false;
+            } else {
+                envCheck.style.display = 'none';
+                return true;
+            }
+        }
+        
+        // Generate device ID
+        function generateDeviceId() {
+            // Create a fingerprint from multiple browser properties
+            const components = [
+                navigator.userAgent,
+                navigator.platform,
+                navigator.language,
+                navigator.hardwareConcurrency || 'unknown',
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset(),
+                !!navigator.cookieEnabled
+            ].join('|');
+            
+            // Hash the components to create a unique but consistent ID
+            function hashString(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(36);
+            }
+            
+            const deviceHash = hashString(components);
+            const randomPart = Math.random().toString(36).substring(2, 10);
+            const timestamp = Date.now().toString(36);
+            
+            return `TG-DEV-${deviceHash.substring(0, 8)}-${randomPart}-${timestamp.substring(timestamp.length - 4)}`;
+        }
+        
+        // Get or create device ID
+        let deviceID = localStorage.getItem("tg_device_id");
+        if (!deviceID) {
+            deviceID = generateDeviceId();
+            localStorage.setItem("tg_device_id", deviceID);
+        }
+        
+        // Display device ID
+        document.getElementById('deviceIdDisplay').textContent = deviceID;
+        
+        // Check if this device is already verified for THIS SPECIFIC BOT
+        function checkBotSpecificVerification() {
+            const botVerifications = JSON.parse(localStorage.getItem("tg_bot_verifications") || "{}");
+            return botVerifications[botId] || null;
+        }
+        
+        // Update device status badge
+        function updateDeviceStatusBadge() {
+            const badge = document.getElementById('deviceStatusBadge');
+            const verification = checkBotSpecificVerification();
+            
+            if (verification) {
+                const daysAgo = Math.floor((Date.now() - new Date(verification.timestamp)) / (1000 * 60 * 60 * 24));
+                badge.textContent = `Verified ${daysAgo} day${daysAgo !== 1 ? 's' : ''} ago`;
+                badge.className = 'status-badge status-verified';
+                return true;
+            } else {
+                badge.textContent = 'New Device';
+                badge.className = 'status-badge status-new';
+                return false;
+            }
+        }
+        
+        // DOM Elements
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resultBox = document.getElementById('resultBox');
+        const actionButtons = document.getElementById('actionButtons');
+        const closeBtn = document.getElementById('closeBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const steps = [
+            document.getElementById('step1'),
+            document.getElementById('step2'),
+            document.getElementById('step3'),
+            document.getElementById('step4')
+        ];
+        
+        // Update progress bar
+        function updateProgress(percent) {
+            progressFill.style.width = `${percent}%`;
+        }
+        
+        // Update step status
+        function updateStep(stepIndex, status) {
+            if (stepIndex >= steps.length) return;
+            
+            const step = steps[stepIndex];
+            step.className = 'step';
+            
+            if (status === 'active') {
+                step.classList.add('active');
+            } else if (status === 'completed') {
+                step.classList.add('completed');
+                step.querySelector('.step-icon').innerHTML = '<i class="fas fa-check"></i>';
+            } else if (status === 'failed') {
+                step.classList.add('failed');
+                step.querySelector('.step-icon').innerHTML = '<i class="fas fa-times"></i>';
+            }
+            
+            updateProgress((stepIndex + 1) * 25);
+        }
+        
+        // Show result with appropriate styling
+        function showResult(message, type = 'info') {
+            resultBox.className = `result-box ${type}`;
+            resultBox.innerHTML = message;
+            resultBox.style.display = 'block';
+        }
+        
+        // Show action buttons
+        function showActionButtons() {
+            actionButtons.style.display = 'flex';
+        }
+        
+        // Hide action buttons
+        function hideActionButtons() {
+            actionButtons.style.display = 'none';
+        }
+        
+        // Internet connectivity check
+        async function checkInternet() {
+            updateStep(1, 'active');
+            
+            let hasInternet = false;
+            
+            // Try multiple endpoints
+            const endpoints = [
+                'https://www.google.com/generate_204',
+                'https://connectivitycheck.gstatic.com/generate_204'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    
+                    await fetch(endpoint, { 
+                        mode: 'no-cors',
+                        signal: controller.signal 
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    hasInternet = true;
+                    break;
+                } catch (error) {
+                    continue;
+                }
+            }
+            
+            if (!hasInternet) {
+                updateStep(1, 'failed');
+                return false;
+            }
+            
+            updateStep(1, 'completed');
+            return true;
+        }
+        
+        // VPN/Proxy detection
+        async function checkVPN() {
+            updateStep(2, 'active');
+            
+            try {
+                let vpnDetected = false;
+                
+                // Quick check using WebRTC
+                if (typeof RTCPeerConnection !== 'undefined') {
+                    try {
+                        const rtc = new RTCPeerConnection({iceServers: []});
+                        const candidatePromise = new Promise((resolve) => {
+                            rtc.onicecandidate = (event) => {
+                                if (event.candidate && event.candidate.candidate) {
+                                    const candidate = event.candidate.candidate.toLowerCase();
+                                    if (candidate.includes('.vpn.') || candidate.includes('.proxy.')) {
+                                        vpnDetected = true;
+                                    }
+                                }
+                            };
+                            setTimeout(() => resolve(), 500);
+                        });
+                        
+                        rtc.createDataChannel('');
+                        const offer = await rtc.createOffer();
+                        await rtc.setLocalDescription(offer);
+                        await candidatePromise;
+                        rtc.close();
+                    } catch (e) {
+                        // WebRTC blocked - could indicate VPN/proxy
+                        vpnDetected = true;
+                    }
+                }
+                
+                if (vpnDetected) {
+                    updateStep(2, 'failed');
+                    return true;
+                }
+                
+                updateStep(2, 'completed');
+                return false;
+            } catch (error) {
+                console.log('VPN check error:', error);
+                updateStep(2, 'failed');
+                return true; // Fail safe
+            }
+        }
+        
+        // Save bot-specific verification
+        function saveBotVerification(status, vpnDetected = false) {
+            const botVerifications = JSON.parse(localStorage.getItem("tg_bot_verifications") || "{}");
+            
+            botVerifications[botId] = {
+                deviceId: deviceID,
+                status: status,
+                vpnDetected: vpnDetected,
+                timestamp: new Date().toISOString(),
+                verifiedAt: Date.now()
+            };
+            
+            localStorage.setItem("tg_bot_verifications", JSON.stringify(botVerifications));
+            updateDeviceStatusBadge();
+        }
+        
+        // Send verification result to webhook
+        async function sendVerificationResult(data) {
+            updateStep(3, 'active');
+            
+            try {
+                const payload = {
+                    bot_id: botId,
+                    device_id: deviceID,
+                    timestamp: new Date().toISOString(),
+                    user_agent: navigator.userAgent.substring(0, 100),
+                    platform: navigator.platform,
+                    is_telegram: isTelegramEnvironment(),
+                    ...data
+                };
+                
+                // Send to webhook
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Verification-Source': 'Telegram-Device-Verification'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    updateStep(3, 'completed');
+                    return { success: true };
+                } else {
+                    updateStep(3, 'failed');
+                    return { success: false, error: 'Webhook returned error' };
+                }
+            } catch (error) {
+                console.error('Failed to send verification:', error);
+                updateStep(3, 'failed');
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // Telegram environment check
+        async function checkTelegramEnvironment() {
+            updateStep(0, 'active');
+            
+            const isTelegram = isTelegramEnvironment();
+            
+            if (!isTelegram) {
+                updateStep(0, 'failed');
+                showResult(
+                    '<i class="fab fa-telegram"></i> <strong>Telegram Required</strong><br>' +
+                    '<small>This verification only works within Telegram Web/App. Please open this link in Telegram.</small>',
+                    'error'
+                );
+                showActionButtons();
+                return false;
+            }
+            
+            updateStep(0, 'completed');
+            return true;
+        }
+        
+        // Main verification function - SINGLE VERIFICATION ONLY
+        async function startVerification() {
+            // Check if already verified first
+            const alreadyVerified = updateDeviceStatusBadge();
+            
+            if (alreadyVerified) {
+                showResult(
+                    '<i class="fas fa-info-circle"></i> <strong>Already Verified</strong><br>' +
+                    '<small>This device is already verified for this bot.</small>',
+                    'info'
+                );
+                verifyBtn.disabled = true;
+                verifyBtn.innerHTML = '<i class="fas fa-check"></i> Already Verified';
+                showActionButtons();
+                return;
+            }
+            
+            // Reset UI
+            steps.forEach(step => {
+                step.className = 'step';
+                const icon = step.querySelector('.step-icon');
+                if (icon) {
+                    icon.innerHTML = icon.textContent;
+                }
+            });
+            
+            resultBox.style.display = 'none';
+            hideActionButtons();
+            progressBar.classList.add('active');
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<span class="loading"></span> Verifying...';
+            
+            updateProgress(0);
+            
+            try {
+                // Step 1: Telegram environment check
+                const isTelegram = await checkTelegramEnvironment();
+                if (!isTelegram) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Start Verification';
+                    return;
+                }
+                
+                // Step 2: Internet check - if fails, treat as same device
+                const hasInternet = await checkInternet();
+                if (!hasInternet) {
+                    // DATA ISSUE: Treat as same device
+                    showResult(
+                        '<i class="fas fa-exclamation-triangle"></i> <strong>Network Issue</strong><br>' +
+                        '<small>Cannot verify due to network connection. Device treated as already verified.</small>',
+                        'warning'
+                    );
+                    
+                    // Save as same device for this bot
+                    saveBotVerification('same_device');
+                    
+                    // Send same_device response to webhook
+                    await sendVerificationResult({
+                        status: 'same_device',
+                        vpn: false,
+                        data_issue: true,
+                        note: 'Network connection issue during verification'
+                    });
+                    
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = '<i class="fas fa-check"></i> Verified';
+                    showActionButtons();
+                    return;
+                }
+                
+                // Step 3: VPN check
+                const hasVPN = await checkVPN();
+                if (hasVPN) {
+                    showResult(
+                        '<i class="fas fa-user-secret"></i> <strong>VPN/Proxy Detected</strong><br>' +
+                        '<small>VPN/Proxy usage is not allowed for verification.</small>',
+                        'error'
+                    );
+                    
+                    // Save VPN detection for this bot
+                    saveBotVerification('vpn_detected', true);
+                    
+                    await sendVerificationResult({
+                        status: 'vpn_detected',
+                        vpn: true,
+                        data_issue: false,
+                        note: 'VPN/Proxy was detected during verification'
+                    });
+                    
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = '<i class="fas fa-ban"></i> VPN Detected';
+                    showActionButtons();
+                    return;
+                }
+                
+                // Step 4: Final verification
+                const verificationSent = await sendVerificationResult({
+                    status: 'verified',
+                    vpn: false,
+                    data_issue: false,
+                    first_verification: true
+                });
+                
+                if (verificationSent.success) {
+                    // Save successful verification FOR THIS BOT ONLY (ONE TIME)
+                    saveBotVerification('verified');
+                    
+                    showResult(
+                        '<i class="fas fa-check-circle"></i> <strong>Successfully Verified!</strong><br>' +
+                        '<small>Your device has been verified for this Telegram bot.</small>',
+                        'success'
+                    );
+                    
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = '<i class="fas fa-check"></i> Verified';
+                    showActionButtons();
+                } else {
+                    showResult(
+                        '<i class="fas fa-exclamation-circle"></i> <strong>Verification Failed</strong><br>' +
+                        '<small>Please contact support if you believe this is an error.</small>',
+                        'error'
+                    );
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = '<i class="fas fa-times"></i> Failed';
+                    showActionButtons();
+                }
+                
+            } catch (error) {
+                console.error('Verification error:', error);
+                showResult(
+                    `<i class="fas fa-exclamation-triangle"></i> <strong>Error Occurred</strong><br>
+                     <small>Please contact support.</small>`,
+                    'error'
+                );
+                verifyBtn.disabled = true;
+                verifyBtn.innerHTML = '<i class="fas fa-times"></i> Error';
+                showActionButtons();
+            } finally {
+                progressBar.classList.remove('active');
+            }
+        }
+        
+        // Close page function
+        function closePage() {
+            // Try to close the window
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.close();
+            }
+        }
+        
+        // Event listeners
+        verifyBtn.addEventListener('click', startVerification);
+        closeBtn.addEventListener('click', closePage);
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check environment on load
+            checkEnvironment();
+            
+            // Update device status
+            updateDeviceStatusBadge();
+            
+            // Check if already verified for this bot
+            const verification = checkBotSpecificVerification();
+            if (verification) {
+                verifyBtn.disabled = true;
+                verifyBtn.innerHTML = '<i class="fas fa-check"></i> Already Verified';
+                verifyBtn.style.background = '#4caf50';
+            }
+        });
+    </script>
+</body>
+</html>
